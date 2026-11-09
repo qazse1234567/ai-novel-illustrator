@@ -93,6 +93,45 @@ class ProjectStore:
         with open(info_file, 'r', encoding='utf-8') as f:
             return json.load(f)
 
+    def save_project_info(self, project_id: str, info: Dict[str, Any]) -> None:
+        """保存项目信息（整体覆盖）"""
+        project_dir = self.base_dir / project_id
+        project_dir.mkdir(parents=True, exist_ok=True)
+
+        payload = dict(info)
+        payload["id"] = project_id
+        info_file = project_dir / "project.json"
+        with open(info_file, 'w', encoding='utf-8') as f:
+            json.dump(payload, f, ensure_ascii=False, indent=2)
+
+    # 文档型数据在文件后端下的存放位置；保持旧路径以避免历史项目失效
+    _DOCUMENT_PATHS = {
+        "scene_groups": "scene_groups.json",
+        "auto_illustration_state": "data/auto_illustration_state.json",
+    }
+
+    def _document_path(self, project_id: str, doc_key: str) -> Path:
+        relative = self._DOCUMENT_PATHS.get(doc_key, f"data/documents/{doc_key}.json")
+        return self.base_dir / project_id / relative
+
+    def save_document(self, project_id: str, doc_key: str, payload: Any) -> None:
+        """保存项目级文档（如场景分组、自动配图状态）"""
+        path = self._document_path(project_id, doc_key)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(payload, f, ensure_ascii=False, indent=2)
+
+    def load_document(self, project_id: str, doc_key: str, default: Any = None) -> Any:
+        """读取项目级文档"""
+        path = self._document_path(project_id, doc_key)
+        if not path.exists():
+            return default
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception:
+            return default
+
     def save_world_bible(
         self,
         project_id: str,

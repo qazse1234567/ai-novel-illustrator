@@ -31,6 +31,7 @@ from src.render.chatgpt2api_backend import ChatGPT2APIBackend
 from src.api.image_paths import get_project_images_dir
 
 from src.storage.project_store import ProjectStore
+from src.storage.factory import get_store
 from src.llm.adapter import LLMAdapter
 from src.llm.prompt_loader import PromptLoader
 
@@ -85,7 +86,7 @@ class Pipeline:
             project_store: 项目存储实例
         """
         self.config = config
-        self.project_store = project_store or ProjectStore()
+        self.project_store = project_store or get_store()
         self._components: Dict[str, Any] = {}
 
         self._preprocessor: Optional[Preprocessor] = None
@@ -1016,7 +1017,7 @@ async def run_pipeline(
     Returns:
         PipelineContext 对象
     """
-    project_store = ProjectStore(base_dir=output_dir) if output_dir else None
+    project_store = get_store(base_dir=output_dir) if output_dir else None
     pipeline = Pipeline(config, project_store)
     return await pipeline.run(
         input_path=input_path,

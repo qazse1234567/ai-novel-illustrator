@@ -3,7 +3,7 @@ from typing import Optional
 from pydantic import BaseModel
 from pathlib import Path
 
-from src.storage.project_store import ProjectStore
+from src.storage.factory import get_store
 from src.api.image_paths import get_project_images_dir, get_project_output_dir, image_url
 from src.llm.adapter import LLMAdapter
 from src.llm.prompt_loader import PromptLoader
@@ -29,7 +29,7 @@ from src.core.scene_groups import (
 
 router = APIRouter()
 
-store = ProjectStore()
+store = get_store()
 
 
 class SceneGroupRequest(BaseModel):

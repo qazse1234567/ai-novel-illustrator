@@ -35,10 +35,10 @@ from src.models.chapter import Chapter
 from src.models.entity import Entity
 from src.models.prompt import Prompt, PromptParameters
 from src.models.world_bible import WorldBible
-from src.storage.project_store import ProjectStore
+from src.storage.factory import get_store
 
 router = APIRouter()
-store = ProjectStore()
+store = get_store()
 
 
 class AiPrepareRequest(BaseModel):

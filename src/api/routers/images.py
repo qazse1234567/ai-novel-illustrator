@@ -7,7 +7,7 @@ from urllib.parse import unquote, urlparse
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
-from src.storage.project_store import ProjectStore
+from src.storage.factory import get_store
 from src.core.image_generator import ImageGenerator
 from src.core.face_anchor import FaceAnchorGenerator
 from src.models.entity import Entity
@@ -25,7 +25,7 @@ from src.api.image_paths import (
 
 router = APIRouter()
 
-store = ProjectStore()
+store = get_store()
 
 _image_tasks: dict = {}
 

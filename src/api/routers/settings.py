@@ -99,6 +99,11 @@ async def get_settings():
         key = config["llm"]["api_key"]
         if key:
             config["llm"]["api_key"] = key[:8] + "****" + key[-4:] if len(key) > 12 else "****"
+
+    mysql_config = (config.get("storage") or {}).get("mysql") or {}
+    if mysql_config.get("password"):
+        mysql_config["password"] = "******"
+
     return config
 
 

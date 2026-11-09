@@ -75,13 +75,13 @@ def init(ctx, book_path: str, name: str, output: str):
         border_style="cyan"
     ))
     
-    from src.storage.project_store import ProjectStore
+    from src.storage.factory import get_store
     
     import hashlib
     import time
     project_id = hashlib.md5(f"{name}_{time.time()}".encode()).hexdigest()[:12]
     
-    store = ProjectStore(base_dir=output)
+    store = get_store(base_dir=output)
     
     console.print(f"\n[green]创建项目目录...[/green]")
     project_dir = store.create_project(project_id, name, config)
@@ -160,9 +160,9 @@ def run(ctx, input_path: str, output_dir: str, stages: str, enable_image: bool, 
             return
     
     from src.core.pipeline import Pipeline
-    from src.storage.project_store import ProjectStore
+    from src.storage.factory import get_store
     
-    store = ProjectStore(base_dir=output_dir) if output_dir else ProjectStore()
+    store = get_store(base_dir=output_dir) if output_dir else get_store()
     pipeline = Pipeline(config, store)
     
     try:
@@ -201,9 +201,9 @@ def resume(ctx, project_id: str, book_path: Optional[str], chapters: str):
     """
     config = ctx.obj.get('config', {})
     
-    from src.storage.project_store import ProjectStore
+    from src.storage.factory import get_store
     
-    store = ProjectStore()
+    store = get_store()
     
     if not store.project_exists(project_id):
         console.print(f"[red]项目不存在: {project_id}[/red]")
@@ -257,9 +257,9 @@ def info(ctx, project_id: str):
     """
     config = ctx.obj.get('config', {})
     
-    from src.storage.project_store import ProjectStore
+    from src.storage.factory import get_store
     
-    store = ProjectStore()
+    store = get_store()
     
     if not store.project_exists(project_id):
         console.print(f"[red]项目不存在: {project_id}[/red]")
@@ -354,9 +354,9 @@ def prompt(ctx, project_id: str, prompt_id: str, filter_type: str, limit: int):
         python -m src.cli prompt myproject --type character   # 只显示角色提示词
         python -m src.cli prompt myproject abc123             # 显示特定提示词详情
     """
-    from src.storage.project_store import ProjectStore
+    from src.storage.factory import get_store
     
-    store = ProjectStore()
+    store = get_store()
     
     if not store.project_exists(project_id):
         console.print(f"[red]项目不存在: {project_id}[/red]")
@@ -473,9 +473,9 @@ def entities(ctx, project_id: str):
     
     显示提取的所有角色、场景和物品实体。
     """
-    from src.storage.project_store import ProjectStore
+    from src.storage.factory import get_store
     
-    store = ProjectStore()
+    store = get_store()
     
     if not store.project_exists(project_id):
         console.print(f"[red]项目不存在: {project_id}[/red]")
@@ -552,9 +552,9 @@ def export(ctx, project_id: str, format: str, output: str):
     
     导出提示词到指定格式。
     """
-    from src.storage.project_store import ProjectStore
+    from src.storage.factory import get_store
     
-    store = ProjectStore()
+    store = get_store()
     
     if not store.project_exists(project_id):
         console.print(f"[red]项目不存在: {project_id}[/red]")
@@ -587,9 +587,9 @@ def validate(ctx, project_id: str):
     
     检查项目数据是否完整，报告缺失的文件。
     """
-    from src.storage.project_store import ProjectStore
+    from src.storage.factory import get_store
     
-    store = ProjectStore()
+    store = get_store()
     
     if not store.project_exists(project_id):
         console.print(f"[red]项目不存在: {project_id}[/red]")
@@ -665,9 +665,9 @@ def validate(ctx, project_id: str):
 @click.pass_context
 def list_projects(ctx):
     """列出所有项目"""
-    from src.storage.project_store import ProjectStore
+    from src.storage.factory import get_store
     
-    store = ProjectStore()
+    store = get_store()
     projects = store.list_projects()
     
     if not projects:
@@ -701,9 +701,9 @@ def delete(ctx, project_id: str):
     
     危险操作！将永久删除项目及其所有数据。
     """
-    from src.storage.project_store import ProjectStore
+    from src.storage.factory import get_store
     
-    store = ProjectStore()
+    store = get_store()
     
     if not store.project_exists(project_id):
         console.print(f"[red]项目不存在: {project_id}[/red]")

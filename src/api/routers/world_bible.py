@@ -2,11 +2,11 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Any, Dict
 
-from src.storage.project_store import ProjectStore
+from src.storage.factory import get_store
 
 router = APIRouter()
 
-store = ProjectStore()
+store = get_store()
 
 
 class WorldBibleUpdate(BaseModel):

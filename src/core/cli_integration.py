@@ -16,6 +16,7 @@ from rich import box
 
 from src.core.pipeline import Pipeline, PipelineContext
 from src.storage.project_store import ProjectStore
+from src.storage.factory import get_store
 
 console = Console()
 
@@ -43,7 +44,7 @@ def create_pipeline(config_path: Optional[str] = None, output_dir: str = "./proj
         console.print(f"[yellow]配置文件不存在: {config_file}，使用默认配置[/yellow]")
         config = {}
 
-    project_store = ProjectStore(base_dir=output_dir)
+    project_store = get_store(base_dir=output_dir)
     return Pipeline(config, project_store)
 
 
@@ -58,7 +59,7 @@ def create_pipeline_with_config(config: Dict[str, Any], output_dir: str = "./pro
     Returns:
         Pipeline 实例
     """
-    project_store = ProjectStore(base_dir=output_dir)
+    project_store = get_store(base_dir=output_dir)
     return Pipeline(config, project_store)
 
 
@@ -212,7 +213,7 @@ def load_project_context(project_id: str, project_store: ProjectStore = None) ->
         包含所有项目数据的字典
     """
     if project_store is None:
-        project_store = ProjectStore()
+        project_store = get_store()
 
     if not project_store.project_exists(project_id):
         return None
@@ -264,7 +265,7 @@ def export_project_to_json(project_id: str, output_path: str = None) -> str:
         raise ValueError(f"项目不存在: {project_id}")
 
     if output_path is None:
-        store = ProjectStore()
+        store = get_store()
         project_dir = store.get_project_dir(project_id)
         output_path = str(project_dir / f"{project_id}_export.json")
 
@@ -309,7 +310,7 @@ class PipelineRunner:
         """
         self.config = config or {}
         self.output_dir = output_dir
-        self.project_store = ProjectStore(base_dir=output_dir)
+        self.project_store = get_store(base_dir=output_dir)
         self.pipeline = Pipeline(self.config, self.project_store)
 
     async def run_full(

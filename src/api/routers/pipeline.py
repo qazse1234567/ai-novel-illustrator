@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from src.storage.project_store import ProjectStore
+from src.storage.factory import get_store
 from src.core.pipeline import Pipeline
 from src.api.routers.settings import load_config
 
@@ -16,7 +16,7 @@ router = APIRouter()
 _pipeline_tasks: dict = {}
 _pipeline_status: dict = {}
 
-store = ProjectStore()
+store = get_store()
 IMAGE_STAGES = {"illustrate", "face_anchor", "character_image", "scene_image", "item_image"}
 
 

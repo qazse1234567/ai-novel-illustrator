@@ -1,14 +1,45 @@
 services:
+  mysql:
+    image: mysql:8.0
+    container_name: ai-novel-illustrator-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-ai_novel_root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-ai_novel}
+      MYSQL_USER: ${MYSQL_USER:-ai_novel}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-ai_novel_pass}
+      TZ: Asia/Shanghai
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-ai_novel_root}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
   backend:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: ai-novel-illustrator-backend
     restart: unless-stopped
+    environment:
+      STORAGE_BACKEND: mysql
+      PROJECTS_DIR: /app/projects
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      MYSQL_USER: ${MYSQL_USER:-ai_novel}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-ai_novel_pass}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-ai_novel}
     volumes:
       - ./projects:/app/projects
       - ./output:/app/output
       - ./config/user.yaml:/app/config/user.yaml
+    depends_on:
+      mysql:
+        condition: service_healthy
     expose:
       - "8000"
 
@@ -24,3 +55,6 @@ services:
       - backend
     ports:
       - "8888:80"
+
+volumes:
+  mysql_data:

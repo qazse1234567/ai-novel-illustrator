@@ -2,7 +2,6 @@ import asyncio
 import json
 import uuid
 from datetime import datetime
-from pathlib import Path
 from typing import Any, Awaitable, Callable, Optional
 
 from fastapi import APIRouter, HTTPException, Request
@@ -21,10 +20,10 @@ from src.api.routers.chapters import (
     scene_chapters as _scene_chapters,
 )
 from src.api.routers.images import _entity_image_path, _generate_single_entity_image
-from src.storage.project_store import ProjectStore
+from src.storage.factory import get_store
 
 router = APIRouter()
-store = ProjectStore()
+store = get_store()
 
 _auto_tasks: dict[str, asyncio.Task] = {}
 
@@ -39,10 +38,24 @@ def _now() -> str:
     return datetime.now().isoformat()
 
 
-def _state_path(project_id: str) -> Path:
-    path = store.get_project_dir(project_id) / "data" / "auto_illustration_state.json"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    return path
+def _load_state(project_id: str) -> dict[str, Any]:
+    state = _default_state()
+    loaded = store.load_document(project_id, "auto_illustration_state", None)
+    if isinstance(loaded, dict):
+        state.update(loaded)
+
+    state.setdefault("completed_scene_ids", [])
+    state.setdefault("skipped_scene_ids", [])
+    state.setdefault("failed_steps", [])
+    state.setdefault("retry_counts", {})
+    state.setdefault("skip_locked", True)
+    return state
+
+
+def _save_state(project_id: str, state: dict[str, Any]) -> dict[str, Any]:
+    state["updated_at"] = _now()
+    store.save_document(project_id, "auto_illustration_state", state)
+    return state
 
 
 def _default_state() -> dict[str, Any]:
@@ -67,33 +80,6 @@ def _default_state() -> dict[str, Any]:
         "progress": 0,
         "updated_at": _now(),
     }
-
-
-def _load_state(project_id: str) -> dict[str, Any]:
-    state = _default_state()
-    path = _state_path(project_id)
-    if path.exists():
-        try:
-            with open(path, "r", encoding="utf-8") as f:
-                loaded = json.load(f)
-            if isinstance(loaded, dict):
-                state.update(loaded)
-        except Exception:
-            pass
-
-    state.setdefault("completed_scene_ids", [])
-    state.setdefault("skipped_scene_ids", [])
-    state.setdefault("failed_steps", [])
-    state.setdefault("retry_counts", {})
-    state.setdefault("skip_locked", True)
-    return state
-
-
-def _save_state(project_id: str, state: dict[str, Any]) -> dict[str, Any]:
-    state["updated_at"] = _now()
-    with open(_state_path(project_id), "w", encoding="utf-8") as f:
-        json.dump(state, f, ensure_ascii=False, indent=2)
-    return state
 
 
 def _update_state(project_id: str, **patch: Any) -> dict[str, Any]:

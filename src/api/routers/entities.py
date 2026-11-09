@@ -3,12 +3,12 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
-from src.storage.project_store import ProjectStore
+from src.storage.factory import get_store
 from src.api.image_paths import candidate_image_paths, image_url
 
 router = APIRouter()
 
-store = ProjectStore()
+store = get_store()
 
 
 def _entity_image_url(project_id: str, entity: dict) -> Optional[str]:

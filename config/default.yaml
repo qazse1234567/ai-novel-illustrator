@@ -1,3 +1,17 @@
+storage:
+  # file: 项目数据以 JSON 文件存放在 projects/ 目录
+  # mysql: 项目/章节/实体/提示词/世界观/AI记录写入 MySQL，图片与原文保留在磁盘
+  backend: "file"
+  base_dir: "./projects"
+  mysql:
+    host: "127.0.0.1"
+    port: 3306
+    user: "ai_novel"
+    password: ""
+    database: "ai_novel"
+    pool_size: 5
+    max_overflow: 5
+
 llm:
   provider: "openai_compatible"
   model: "deepseek-chat"

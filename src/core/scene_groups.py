@@ -37,9 +37,9 @@ def _project_store(project_store: ProjectStoreLike | None = None) -> ProjectStor
     if project_store is not None:
         return project_store
     if _default_store is None:
-        from src.storage.project_store import ProjectStore
+        from src.storage.factory import get_store
 
-        _default_store = ProjectStore()
+        _default_store = get_store()
     return _default_store
 
 
@@ -204,7 +204,13 @@ def load_scene_groups(
     project_id: str,
     project_store: ProjectStoreLike | None = None,
 ) -> list[dict[str, Any]]:
-    groups_file = scene_groups_path(project_id, project_store)
+    store = _project_store(project_store)
+
+    if hasattr(store, "load_document"):
+        groups = store.load_document(project_id, "scene_groups", [])
+        return groups if isinstance(groups, list) else []
+
+    groups_file = scene_groups_path(project_id, store)
     if not groups_file.exists():
         return []
     try:
@@ -219,6 +225,12 @@ def save_scene_groups(
     groups: list[dict[str, Any]],
     project_store: ProjectStoreLike | None = None,
 ) -> None:
-    groups_file = scene_groups_path(project_id, project_store)
+    store = _project_store(project_store)
+
+    if hasattr(store, "save_document"):
+        store.save_document(project_id, "scene_groups", groups)
+        return
+
+    groups_file = scene_groups_path(project_id, store)
     with open(groups_file, "w", encoding="utf-8") as f:
         json.dump(groups, f, ensure_ascii=False, indent=2)

@@ -5,17 +5,16 @@ from typing import Optional
 
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 
-from src.storage.project_store import ProjectStore
+from src.storage.factory import get_store
 from src.api.image_paths import get_project_images_dir
 
 router = APIRouter()
 
-store = ProjectStore()
+store = get_store()
 
 
 def _format_project(info: dict) -> dict:
     project_id = info.get("id", "")
-    project_dir = store.get_project_dir(project_id)
 
     entity_stats = {"characters": 0, "scenes": 0, "items": 0}
     entities = store.load_entities(project_id)
@@ -33,7 +32,11 @@ def _format_project(info: dict) -> dict:
     if images_dir.exists():
         image_count = sum(1 for _ in images_dir.rglob("*.png"))
 
-    has_wb = (project_dir / "data" / "world_bible.json").exists()
+    has_wb = True
+    try:
+        store.load_world_bible(project_id)
+    except FileNotFoundError:
+        has_wb = False
 
     status = "idle"
     if info.get("error"):
@@ -89,16 +92,13 @@ async def create_project(
     with open(file_path, "wb") as f:
         f.write(content)
 
-    import json
     from datetime import datetime
 
     project_info = store.load_project_info(project_id)
     project_info["input_file"] = str(file_path)
     project_info["novel_name"] = Path(file.filename).stem
     project_info["created_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
-    info_file = project_dir / "project.json"
-    with open(info_file, "w", encoding="utf-8") as f:
-        json.dump(project_info, f, ensure_ascii=False, indent=2)
+    store.save_project_info(project_id, project_info)
 
     return _format_project(project_info)
 
